@@ -1,4 +1,4 @@
-package com.example.ayman_target
+package com.aymanTarget.codexus
 
 import io.flutter.embedding.android.FlutterActivity
 
