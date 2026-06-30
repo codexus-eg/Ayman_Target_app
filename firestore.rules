@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // دالة مساعدة للتحقق من صلاحية الأدمن
+    function isAdmin() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // دالة مساعدة للحصول على اسم المستخدم الحالي
+    function getUserName() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.name;
+    }
+
+    // بيانات المستخدمين
+    match /users/{userId} {
+      // أي مستخدم مسجل يقدر يقرأ بيانات أي مستخدم (للأسماء والفروع)
+      allow read: if request.auth != null;
+      // المستخدم يقدر ينشئ بياناته بس
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // المستخدم يقدر يعدل بياناته بس (ما عدا الـ role إلا لو كانت غير موجودة بعد فينشئها كـ employee)
+      allow update: if request.auth != null &&
+        ((request.auth.uid == userId &&
+         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) ||
+          (!('role' in resource.data) && request.resource.data.role == 'employee')))
+        || isAdmin());
+      allow delete: if isAdmin();
+
+      // الإشعارات الفرعية
+      match /notifications/{notificationId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        // الإشعارات تتنشئ بواسطة الأدمن أو صاحب الحساب فقط
+        allow create: if request.auth != null && (isAdmin() || request.auth.uid == userId);
+        allow update: if request.auth != null && request.auth.uid == userId;
+        allow delete: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // الأوردرات
+    match /orders/{orderId} {
+      allow read: if request.auth != null;
+      // إنشاء أوردر: لازم يكون فيه الحقول الأساسية
+      allow create: if request.auth != null &&
+        request.resource.data.keys().hasAll(['clientName', 'branch', 'status']) &&
+        request.resource.data.clientName is string &&
+        request.resource.data.branch is string;
+      // التعديل: صاحب الأوردر أو المسؤول عنه أو الأدمن
+      allow update: if request.auth != null &&
+        (resource.data.creatorName == getUserName() ||
+         resource.data.employeeName == getUserName() ||
+         isAdmin());
+      // الحذف: الأدمن أو صاحب الأوردر أو المسؤول عنه
+      allow delete: if request.auth != null &&
+        (resource.data.creatorName == getUserName() ||
+         resource.data.employeeName == getUserName() ||
+         isAdmin());
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "functions": {
+    "source": "functions"
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "ayman-target-f0684",
+          "appId": "1:294569839134:android:5a229670541b89a93efc0f",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "ayman-target-f0684",
+          "configurations": {
+            "android": "1:294569839134:android:5a229670541b89a93efc0f",
+            "ios": "1:294569839134:ios:92b74e13745f12473efc0f",
+            "macos": "1:294569839134:ios:92b74e13745f12473efc0f",
+            "web": "1:294569839134:web:8f257717f43be62d3efc0f",
+            "windows": "1:294569839134:web:5331eddae8c0e5eb3efc0f"
+          }
+        }
+      }
+    }
+  }
+}
