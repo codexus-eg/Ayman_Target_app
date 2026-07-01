@@ -1,23 +1,43 @@
 workflows:
-  ios-release:
-    name: iOS Unsigned IPA
+  ayman-target-ios-testflight-workflow:
+    name: Ayman Target iOS Build and Publish to TestFlight
     max_build_duration: 120
     instance_type: mac_mini_m2
+
+    integrations:
+      app_store_connect: noourway
+
     environment:
       flutter: stable
       xcode: latest
-    triggering:
-      events:
-        - push
-      branch_patterns:
-        - pattern: main
-          include: true
+      cocoapods: default
+
+      ios_signing:
+        provisioning_profiles:
+          - Ayman_Target_Manual_Profile
+        certificates:
+          - ios_cert_manual
+
     scripts:
-      - name: Get Flutter packages
+      - name: Clean and Get Dependencies
         script: |
+          flutter clean
           flutter pub get
-      - name: Build unsigned IPA
+
+      - name: Apply Vault Profiles
+        script: xcode-project use-profiles
+
+      - name: Build IPA
         script: |
-          flutter build ipa --release --no-codesign
+          flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
+
     artifacts:
       - build/ios/ipa/*.ipa
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+      email:
+        recipients:
+          - codexus.eg@gmail.com
